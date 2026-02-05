@@ -1,20 +1,26 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
+import 'package:mini_room_game/furniture/funiture.dart';
 
-class Room extends PositionComponent {
-  Room({
-    required Vector2 position,
-    required Vector2 size,
-  }) {
+class Room extends PositionComponent with TapCallbacks {
+  Room({required Vector2 position, required Vector2 size}) {
     this.position = position;
     this.size = size;
   }
 
   static const double cellSize = 40;
   int _zCounter = 0;
+  Furniture? selected;
 
   int nextZ() => ++_zCounter;
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    clearSelection();
+    super.onTapDown(event);
+  }
 
   @override
   void render(Canvas canvas) {
@@ -46,5 +52,17 @@ class Room extends PositionComponent {
     // if ((size.y % cellSize).abs() > 0.1) {
     //   canvas.drawLine(Offset(0, size.y), Offset(size.x, size.y), paint);
     // }
+  }
+
+  void select(Furniture f) {
+    if (selected == f) return;
+    selected?.setSelected(false);
+    selected = f;
+    selected!.setSelected(true);
+  }
+
+  void clearSelection() {
+    selected?.setSelected(false);
+    selected = null;
   }
 }
