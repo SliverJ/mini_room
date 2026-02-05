@@ -12,6 +12,9 @@ class Room extends PositionComponent {
   }
 
   static const double cellSize = 40;
+  int _zCounter = 0;
+
+  int nextZ() => ++_zCounter;
 
   @override
   void render(Canvas canvas) {
