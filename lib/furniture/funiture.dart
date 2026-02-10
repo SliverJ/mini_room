@@ -1,7 +1,9 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
+import 'package:flutter/animation.dart';
 import 'package:mini_room_game/vector/vector.dart';
 
 import '../room.dart';
@@ -20,8 +22,10 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
   late Room room;
   final FurnitureSize furnitureSize;
   final Color itemColor;
+
   Vector2? _originPosition;
   Vector2? _ghostPosition;
+
   bool _selected = false;
   bool _dragging = false;
   bool _canPlace = true;
@@ -109,9 +113,12 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
   @override
   void onDragEnd(DragEndEvent event) {
     _dragging = false;
+    Vector2? target;
+
     if (_ghostPosition != null) {
       if (_canPlace) {
         position = _ghostPosition!;
+        target = _ghostPosition;
       } else {
         // 🔥 가장 가까운 빈칸 찾기
         // final near = room.findNearestAvailable(this, _ghostPosition!);
@@ -121,17 +128,56 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
         // 실패 → 원위치 복귀
         if (_originPosition != null) {
           position = _originPosition!;
+          target = _originPosition;
         }
       }
     }
+
+    if (target != null) {
+      add(
+        MoveToEffect(
+          target,
+          EffectController(
+            duration: _canPlace ? 0.15 : 0.1,
+            curve: Curves.easeOut,
+          ),
+        ),
+      );
+      playDropFeedback(); // ⭐ 이게 핵심
+    }
+
     _ghostPosition = null;
 
 
-    position = snapToGrid(position);
-    _clampToRoom();
+    // position = snapToGrid(position);
+    // _clampToRoom();
     room.clearSelection();
     super.onDragEnd(event);
   }
+
+  void playDropFeedback() {
+    // add(
+    //   ScaleEffect.to(
+    //     Vector2.all(1.08),
+    //     EffectController(duration: 0.07),
+    //     onComplete: () {
+    //       add(
+    //         ScaleEffect.to(
+    //           Vector2.all(1.0),
+    //           EffectController(duration: 0.07),
+    //         ),
+    //       );
+    //     },
+    //   ),
+    // );
+    add(
+      SequenceEffect([
+        ScaleEffect.to(Vector2.all(1.08), EffectController(duration: 0.07)),
+        ScaleEffect.to(Vector2.all(1.0), EffectController(duration: 0.07)),
+      ]),
+    );
+  }
+
 
   void _clampToRoom() {
     position.x = position.x.clamp(0, room.size.x - size.x);

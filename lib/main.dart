@@ -40,7 +40,7 @@ class DragGame extends FlameGame {
     double cellSize = Room.cellSize;
     double width = (displaySize.width ~/ cellSize) * cellSize;
 
-    room = Room(position: Vector2((displaySize.width - width) / 2, 100), size: Vector2(width, ((displaySize.height ~/ cellSize) * cellSize) / 2), allowOverlap: false);
+    room = Room(position: Vector2((displaySize.width - width) / 2, 100), size: Vector2(width, ((displaySize.height ~/ cellSize) * cellSize) / 2), allowOverlap: true);
 
     add(room);
 
