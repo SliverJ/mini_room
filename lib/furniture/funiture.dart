@@ -7,21 +7,36 @@ import 'package:flutter/animation.dart';
 import 'package:mini_room_game/vector/vector.dart';
 
 import '../room.dart';
+import 'data/furniture_model.dart';
 import 'data/furniture_size.dart';
 
 class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
-  Furniture({
-    required Vector2 gridPosition, // ⚠ 그리드 좌표
-    required this.furnitureSize,
-    this.itemColor = const Color(0xFF4CAF50),
-  }) {
-    position = gridToWorld(gridPosition);
-    size = Vector2(furnitureSize.gridWidth * Room.cellSize, furnitureSize.gridHeight * Room.cellSize);
+  // Furniture({
+  //   required Vector2 gridPosition, // ⚠ 그리드 좌표
+  //   required this.furnitureSize,
+  //   this.itemColor = const Color(0xFF4CAF50),
+  // }) {
+  //   this.gridPosition = gridPosition.clone();
+  //   position = gridToWorld(gridPosition);
+  //   size = Vector2(furnitureSize.gridWidth * Room.cellSize, furnitureSize.gridHeight * Room.cellSize);
+  // }
+
+  Furniture({required this.model})
+      : furnitureSize = FurnitureSize(model.w, model.h),
+        itemColor = Color(model.color) {
+    position = gridToWorld(Vector2(model.x.toDouble(), model.y.toDouble()));
+    size = Vector2(
+      furnitureSize.gridWidth * Room.cellSize,
+      furnitureSize.gridHeight * Room.cellSize,
+    );
   }
 
-  late Room room;
+  final FurnitureModel model;
   final FurnitureSize furnitureSize;
   final Color itemColor;
+
+  late Room room;
+  late Vector2 gridPosition;
 
   Vector2? _originPosition;
   Vector2? _ghostPosition;
@@ -119,6 +134,7 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
       if (_canPlace) {
         position = _ghostPosition!;
         target = _ghostPosition;
+        gridPosition = worldToGrid(target!);
       } else {
         // 🔥 가장 가까운 빈칸 찾기
         // final near = room.findNearestAvailable(this, _ghostPosition!);
@@ -151,6 +167,15 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
 
     // position = snapToGrid(position);
     // _clampToRoom();
+
+    // ⭐⭐⭐ 데이터 업데이트
+    final grid = worldToGrid(position);
+    model.x = grid.x.toInt();
+    model.y = grid.y.toInt();
+
+    print("changed: ${model.x}, ${model.y}");
+    room.checkData();
+
     room.clearSelection();
     super.onDragEnd(event);
   }

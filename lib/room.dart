@@ -5,6 +5,9 @@ import 'package:flame/events.dart';
 import 'package:mini_room_game/furniture/funiture.dart';
 import 'package:mini_room_game/vector/vector.dart';
 
+import 'furniture/data/furniture_model.dart';
+import 'furniture/data/furniture_size.dart';
+
 class Room extends PositionComponent with TapCallbacks {
   static const double cellSize = 40;
 
@@ -15,6 +18,24 @@ class Room extends PositionComponent with TapCallbacks {
   final bool allowOverlap; // 가구 겹침 여부
 
   int nextZ() => ++_zCounter;
+
+  List<Furniture> get furnitures => children.whereType<Furniture>().toList();
+  List<FurnitureModel> data = [];
+
+
+
+  Future<void> loadFromData(List<FurnitureModel> data) async {
+    this.data = data;
+    for (final f in data) {
+      add(Furniture(model: f));
+    }
+  }
+
+  Future<void> checkData() async {
+    for (final f in data) {
+      print('## data = ${data.toString()}');
+    }
+  }
 
   @override
   void onTapDown(TapDownEvent event) {
@@ -53,6 +74,7 @@ class Room extends PositionComponent with TapCallbacks {
     //   canvas.drawLine(Offset(0, size.y), Offset(size.x, size.y), paint);
     // }
   }
+
 
   void select(Furniture f) {
     if (selected == f) return;
@@ -100,10 +122,7 @@ class Room extends PositionComponent with TapCallbacks {
           final world = gridToWorld(grid);
 
           // 방 범위 체크
-          if (world.x < 0 ||
-              world.y < 0 ||
-              world.x + me.size.x > size.x ||
-              world.y + me.size.y > size.y) {
+          if (world.x < 0 || world.y < 0 || world.x + me.size.x > size.x || world.y + me.size.y > size.y) {
             continue;
           }
 
