@@ -14,3 +14,10 @@ Vector2 snapToGrid(Vector2 pos) {
     (pos.y / Room.cellSize).round() * Room.cellSize,
   );
 }
+
+Vector2 worldToGrid(Vector2 world) {
+  return Vector2(
+    (world.x / Room.cellSize).floorToDouble(),
+    (world.y / Room.cellSize).floorToDouble(),
+  );
+}

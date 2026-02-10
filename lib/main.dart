@@ -4,7 +4,6 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:mini_room_game/room.dart';
 
-import 'draggable_box.dart';
 import 'furniture/data/furniture_size.dart';
 import 'furniture/funiture.dart';
 
@@ -41,7 +40,7 @@ class DragGame extends FlameGame {
     double cellSize = Room.cellSize;
     double width = (displaySize.width ~/ cellSize) * cellSize;
 
-    room = Room(position: Vector2((displaySize.width - width) / 2, 100), size: Vector2(width, ((displaySize.height ~/ cellSize) * cellSize) / 2));
+    room = Room(position: Vector2((displaySize.width - width) / 2, 100), size: Vector2(width, ((displaySize.height ~/ cellSize) * cellSize) / 2), allowOverlap: false);
 
     add(room);
 
@@ -53,20 +52,9 @@ class DragGame extends FlameGame {
     // );
 
     // 3칸짜리 소파
-    room.add(
-      Furniture(
-        gridPosition: Vector2(1, 2),
-        furnitureSize: const FurnitureSize(3, 1),
-      ),
-    );
+    room.add(Furniture(gridPosition: Vector2(1, 2), furnitureSize: const FurnitureSize(3, 1)));
 
     // 2x2 테이블
-    room.add(
-      Furniture(
-        gridPosition: Vector2(4, 3),
-        furnitureSize: const FurnitureSize(2, 2),
-        itemColor: Colors.amber,
-      ),
-    );
+    room.add(Furniture(gridPosition: Vector2(4, 3), furnitureSize: const FurnitureSize(2, 2), itemColor: Colors.amber));
   }
 }

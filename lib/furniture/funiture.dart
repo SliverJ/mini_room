@@ -20,7 +20,11 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
   late Room room;
   final FurnitureSize furnitureSize;
   final Color itemColor;
+  Vector2? _originPosition;
+  Vector2? _ghostPosition;
   bool _selected = false;
+  bool _dragging = false;
+  bool _canPlace = true;
 
   void setSelected(bool value) {
     _selected = value;
@@ -54,17 +58,37 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
 
       canvas.drawRect(size.toRect(), borderPaint);
     }
+
+    if (_dragging && _ghostPosition != null) {
+      canvas.save();
+      canvas.translate(
+        _ghostPosition!.x - position.x,
+        _ghostPosition!.y - position.y,
+      );
+
+      final ghostPaint = Paint()
+        ..color = _canPlace
+            ? const Color(0xFF4CAF50).withValues(alpha: 0.25) // 가능
+            : const Color(0xFFD32F2F).withValues(alpha: 0.25); // 불가
+
+      canvas.drawRect(size.toRect(), ghostPaint);
+      canvas.restore();
+    }
   }
 
   @override
   void onTapDown(TapDownEvent event) {
-    print('## onTapDown ');
-    room.select(this);
+    // TODO: implement onTapDown
     super.onTapDown(event);
   }
 
   @override
   void onDragStart(DragStartEvent event) {
+    _dragging = true;
+
+    _originPosition = position.clone();
+
+    room.select(this);
     // 🔥 여기서 앞으로 가져옴
     updatePriority();
     super.onDragStart(event);
@@ -74,10 +98,35 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
   void onDragUpdate(DragUpdateEvent event) {
     position += event.localDelta;
     _clampToRoom();
+
+    _ghostPosition = snapToGrid(position);
+
+    if (_ghostPosition != null) {
+      _canPlace = room.canPlace(this, _ghostPosition!);
+    }
   }
 
   @override
   void onDragEnd(DragEndEvent event) {
+    _dragging = false;
+    if (_ghostPosition != null) {
+      if (_canPlace) {
+        position = _ghostPosition!;
+      } else {
+        // 🔥 가장 가까운 빈칸 찾기
+        // final near = room.findNearestAvailable(this, _ghostPosition!);
+        // if (near != null) {
+        //   position = near;
+        // }
+        // 실패 → 원위치 복귀
+        if (_originPosition != null) {
+          position = _originPosition!;
+        }
+      }
+    }
+    _ghostPosition = null;
+
+
     position = snapToGrid(position);
     _clampToRoom();
     room.clearSelection();
@@ -91,6 +140,5 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
 
   void updatePriority() {
     priority = room.nextZ();
-    ;
   }
 }
