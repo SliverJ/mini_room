@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
@@ -5,6 +6,7 @@ import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/animation.dart';
 import 'package:mini_room_game/vector/vector.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../room.dart';
 import 'data/furniture_model.dart';
@@ -174,7 +176,7 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
     model.y = grid.y.toInt();
 
     print("changed: ${model.x}, ${model.y}");
-    room.checkData();
+    saveLayout(room.layout);
 
     room.clearSelection();
     super.onDragEnd(event);
@@ -211,5 +213,14 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
 
   void updatePriority() {
     priority = room.nextZ();
+  }
+
+  Future<void> saveLayout(List<FurnitureModel> layout) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final jsonList = layout.map((e) => e.toJson()).toList();
+    final text = jsonEncode(jsonList);
+
+    await prefs.setString('room_layout', text);
   }
 }

@@ -7,8 +7,6 @@ import 'package:mini_room_game/room.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'furniture/data/furniture_model.dart';
-import 'furniture/data/furniture_size.dart';
-import 'furniture/funiture.dart';
 
 void main() {
   runApp(MyApp());
@@ -22,24 +20,52 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final defaultLayout = [
-    FurnitureModel(x: 1, y: 2, w: 3, h: 1, color: 0xFF4CAF50),
-    FurnitureModel(x: 4, y: 3, w: 2, h: 2, color: 0xFFFFC107),
-  ];
+  final defaultLayout = [FurnitureModel(x: 1, y: 2, w: 3, h: 1, color: 0xFF4CAF50), FurnitureModel(x: 4, y: 3, w: 2, h: 2, color: 0xFFFFC107)];
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<List<FurnitureModel>> loadLayout() async {
+    final prefs = await SharedPreferences.getInstance();
+    final text = prefs.getString('room_layout');
+
+    if (text == null) {
+      return []; // 처음 실행
+    }
+
+    final List list = jsonDecode(text);
+    return list.map((e) => FurnitureModel.fromJson(e)).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GameWidget(
-      backgroundBuilder: (context) => Container(color: Colors.white),
-      game: DragGame(displaySize: MediaQuery.of(context).size, layout: defaultLayout),
+    return FutureBuilder<List<FurnitureModel>>(
+      future: loadLayout(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox(); // 또는 로딩 화면
+        }
+
+        // 저장 데이터가 있으면 사용, 없으면 기본값
+        final layout = snapshot.data!.isEmpty ? defaultLayout : snapshot.data!;
+
+        return GameWidget(
+          backgroundBuilder: (context) => Container(color: Colors.white),
+          game: DragGame(displaySize: MediaQuery.of(context).size, layout: layout),
+        );
+      },
     );
+    // return GameWidget(
+    //   backgroundBuilder: (context) => Container(color: Colors.white),
+    //   game: DragGame(displaySize: MediaQuery.of(context).size, layout: defaultLayout),
+    // );
   }
 }
 
 class DragGame extends FlameGame {
-  DragGame({required this.displaySize,  required this.layout,
-  });
+  DragGame({required this.displaySize, required this.layout});
 
   final List<FurnitureModel> layout;
   Size displaySize;

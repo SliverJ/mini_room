@@ -20,20 +20,12 @@ class Room extends PositionComponent with TapCallbacks {
   int nextZ() => ++_zCounter;
 
   List<Furniture> get furnitures => children.whereType<Furniture>().toList();
-  List<FurnitureModel> data = [];
-
-
+  List<FurnitureModel> layout = [];
 
   Future<void> loadFromData(List<FurnitureModel> data) async {
-    this.data = data;
+    layout = data;
     for (final f in data) {
       add(Furniture(model: f));
-    }
-  }
-
-  Future<void> checkData() async {
-    for (final f in data) {
-      print('## data = ${data.toString()}');
     }
   }
 
