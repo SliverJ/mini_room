@@ -4,12 +4,15 @@ import 'dart:convert';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:mini_room_game/room.dart';
+import 'package:mini_room_game/shop/shop_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'furniture/data/funiture_type.dart';
 import 'furniture/data/furniture_model.dart';
+import 'furniture/funiture.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(MaterialApp(home: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -21,6 +24,14 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final defaultLayout = [FurnitureModel(x: 1, y: 2, w: 3, h: 1, color: 0xFF4CAF50), FurnitureModel(x: 4, y: 3, w: 2, h: 2, color: 0xFFFFC107)];
+  final shopItems = [
+    FurnitureType(id: 'sofa', w: 3, h: 1, color: 0xFF4CAF50),
+    FurnitureType(id: 'table', w: 2, h: 2, color: 0xFFFFC107),
+    FurnitureType(id: 'bed', w: 3, h: 2, color: 0xFF2196F3),
+    FurnitureType(id: 'plant', w: 1, h: 1, color: 0xFF2E7D32),
+  ];
+
+  DragGame? game;
 
   @override
   void initState() {
@@ -41,21 +52,52 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<FurnitureModel>>(
-      future: loadLayout(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const SizedBox(); // 또는 로딩 화면
-        }
+    return SafeArea(
+      top: false,
+      child: FutureBuilder<List<FurnitureModel>>(
+        future: loadLayout(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const SizedBox(); // 또는 로딩 화면
+          }
 
-        // 저장 데이터가 있으면 사용, 없으면 기본값
-        final layout = snapshot.data!.isEmpty ? defaultLayout : snapshot.data!;
+          // 저장 데이터가 있으면 사용, 없으면 기본값
+          final layout = snapshot.data!.isEmpty ? defaultLayout : snapshot.data!;
+          game ??= DragGame(displaySize: MediaQuery.of(context).size, layout: layout);
 
-        return GameWidget(
-          backgroundBuilder: (context) => Container(color: Colors.white),
-          game: DragGame(displaySize: MediaQuery.of(context).size, layout: layout),
-        );
-      },
+          // print('## game = ${game == null}');
+
+          return Stack(
+            children: [
+              GameWidget(
+                backgroundBuilder: (context) => Container(color: Colors.white),
+                game: game!,
+              ),
+              // ⭐ 하단 상점
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: ShopBar(game: game!, shopItems: shopItems),
+                // child: Draggable<FurnitureType>(
+                //   data: shopSofa,
+                //   feedback: Container(width: 60, height: 60, color: Colors.green),
+                //   child: Container(width: 60, height: 60, color: Colors.green),
+                //   onDragStarted: () {
+                //     game?.startShopDrag(shopSofa);
+                //   },
+                //   onDragUpdate: (detail) {
+                //     game?.updateShopDragPosition(detail.globalPosition);
+                //   },
+                //   onDragEnd: (_) {
+                //     game?.endShopDrag();
+                //   },
+                // ),
+              ),
+            ],
+          );
+        },
+      ),
     );
     // return GameWidget(
     //   backgroundBuilder: (context) => Container(color: Colors.white),
@@ -72,6 +114,8 @@ class DragGame extends FlameGame {
 
   late Room room;
 
+  Furniture? shopPreview;
+
   @override
   Future<void> onLoad() async {
     double cellSize = Room.cellSize;
@@ -81,44 +125,35 @@ class DragGame extends FlameGame {
 
     add(room);
 
-    // room.add(
-    //   DraggableBox(
-    //     position: Vector2(50, 50), // ⚠ room 기준 좌표
-    //     size: Vector2(80, 80),
-    //   ),
-    // );
-
     await room.loadFromData(layout);
   }
-
-  // Future<void> saveRoom(Room room) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //
-  //   final data = room.furnitures.map((f) => f.toJson()).toList();
-  //
-  //   final jsonString = jsonEncode(data);
-  //
-  //   await prefs.setString('room_data', jsonString);
-  // }
-  //
-  // Future<void> loadRoom(Room room) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final jsonString = prefs.getString('room_data');
-  //
-  //   if (jsonString == null) return;
-  //
-  //   final List list = jsonDecode(jsonString);
-  //
-  //   clearFurnitures(room);
-  //
-  //   for (final item in list) {
-  //     room.add(Furniture.fromJson(item));
-  //   }
-  // }
 
   void clearFurnitures(Room room) {
     for (final f in room.furnitures) {
       f.removeFromParent();
     }
+  }
+
+  // 상점 드래그 시작
+  void startShopDrag(FurnitureType type) {
+
+    final model = FurnitureModel(x: 0, y: 0, w: type.w, h: type.h, color: type.color);
+
+    shopPreview = Furniture(model: model)..isPreviewFromShop = true;
+    room.add(shopPreview!);
+  }
+
+  // 드래그 중 위치 갱신
+  void updateShopDragPosition(Offset global) {
+    if (shopPreview == null) return;
+
+    final local = convertGlobalToLocalCoordinate(Vector2(global.dx, global.dy));
+    shopPreview!.position = local;
+  }
+
+  // 드래그 종료
+  void endShopDrag() {
+    shopPreview?.finishShopDrop();
+    shopPreview = null;
   }
 }

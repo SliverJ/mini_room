@@ -47,6 +47,8 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
   bool _dragging = false;
   bool _canPlace = true;
 
+  bool isPreviewFromShop = false;
+
   void setSelected(bool value) {
     _selected = value;
   }
@@ -222,5 +224,22 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
     final text = jsonEncode(jsonList);
 
     await prefs.setString('room_layout', text);
+  }
+
+  void finishShopDrop() {
+    _ghostPosition = snapToGrid(position);
+
+    if (_ghostPosition != null && room.canPlace(this, _ghostPosition!)) {
+      position = _ghostPosition!;
+
+      final grid = worldToGrid(position);
+      model.x = grid.x.toInt();
+      model.y = grid.y.toInt();
+
+      room.layout.add(model);
+      saveLayout(room.layout);
+    } else {
+      removeFromParent();
+    }
   }
 }
