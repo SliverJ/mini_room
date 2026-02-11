@@ -243,17 +243,27 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
   void finishShopDrop() {
     _ghostPosition = snapToGrid(position);
 
-    if (_ghostPosition != null && room.canPlace(this, _ghostPosition!)) {
-      position = _ghostPosition!;
+    if (_ghostPosition != null) {
+      final inside =
+          _ghostPosition!.x >= 0 &&
+              _ghostPosition!.y >= 0 &&
+              _ghostPosition!.x + size.x <= room.size.x &&
+              _ghostPosition!.y + size.y <= room.size.y;
 
-      final grid = worldToGrid(position);
-      model.x = grid.x.toInt();
-      model.y = grid.y.toInt();
+      if (inside && room.canPlace(this, _ghostPosition!)) {
+        position = _ghostPosition!;
 
-      room.layout.add(model);
-      saveLayout(room.layout);
-    } else {
-      removeFromParent();
+        final grid = worldToGrid(position);
+        model.x = grid.x.toInt();
+        model.y = grid.y.toInt();
+
+        room.layout.add(model);
+        saveLayout(room.layout);
+        return;
+      }
     }
+
+    // 실패
+    removeFromParent();
   }
 }
