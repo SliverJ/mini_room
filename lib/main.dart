@@ -135,20 +135,29 @@ class DragGame extends FlameGame {
   }
 
   // 상점 드래그 시작
-  void startShopDrag(FurnitureType type) {
-
+  void startShopDrag(FurnitureType type, Offset global) {
     final model = FurnitureModel(x: 0, y: 0, w: type.w, h: type.h, color: type.color);
 
     shopPreview = Furniture(model: model)..isPreviewFromShop = true;
+
     room.add(shopPreview!);
+
+    updateShopDragPosition(global);
   }
 
   // 드래그 중 위치 갱신
   void updateShopDragPosition(Offset global) {
     if (shopPreview == null) return;
 
-    final local = convertGlobalToLocalCoordinate(Vector2(global.dx, global.dy));
-    shopPreview!.position = local;
+    final gamePoint = convertGlobalToLocalCoordinate(
+      Vector2(global.dx, global.dy),
+    );
+
+    final roomPoint = gamePoint - room.position;
+
+    shopPreview!.updatePreviewAt(
+      roomPoint - shopPreview!.size / 2,
+    );
   }
 
   // 드래그 종료

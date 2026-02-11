@@ -26,21 +26,22 @@ class ShopBar extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = shopItems[index];
 
-          return Draggable<FurnitureType>(
-            data: item,
+          return Listener(
+            onPointerDown: (event) => game.startShopDrag(item, event.position),
+            child: Draggable<FurnitureType>(
+              data: item,
 
-            // feedback: _itemView(item, dragging: true),
-            feedback: const SizedBox(),
-            childWhenDragging: Opacity(
-              opacity: 0.3,
+              // feedback: _itemView(item, dragging: true),
+              feedback: const SizedBox(),
+              childWhenDragging: Opacity(
+                opacity: 0.3,
+                child: _itemView(item),
+              ),
               child: _itemView(item),
+              onDragUpdate: (detail) =>
+                  game.updateShopDragPosition(detail.globalPosition),
+              onDragEnd: (_) => game.endShopDrag(),
             ),
-            child: _itemView(item),
-
-            onDragStarted: () => game.startShopDrag(item),
-            onDragUpdate: (detail) =>
-                game.updateShopDragPosition(detail.globalPosition),
-            onDragEnd: (_) => game.endShopDrag(),
           );
         },
       ),

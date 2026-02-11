@@ -207,6 +207,20 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
     );
   }
 
+  void updatePreviewAt(Vector2 roomPosition) {
+    // 실제 오브젝트는 손가락을 따라 움직이고
+    position = roomPosition;
+
+    // 스냅 위치 계산
+    _ghostPosition = snapToGrid(position);
+
+    // 배치 가능 여부 체크
+    if (_ghostPosition != null) {
+      _canPlace = room.canPlace(this, _ghostPosition!);
+    }
+  }
+
+
 
   void _clampToRoom() {
     position.x = position.x.clamp(0, room.size.x - size.x);
