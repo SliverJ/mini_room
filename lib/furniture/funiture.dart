@@ -177,7 +177,6 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
     model.x = grid.x.toInt();
     model.y = grid.y.toInt();
 
-    print("changed: ${model.x}, ${model.y}");
     saveLayout(room.layout);
 
     room.clearSelection();
@@ -208,6 +207,8 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
   }
 
   void updatePreviewAt(Vector2 roomPosition) {
+    if (!isMounted) return;
+
     // 실제 오브젝트는 손가락을 따라 움직이고
     position = roomPosition;
 
@@ -216,7 +217,15 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
 
     // 배치 가능 여부 체크
     if (_ghostPosition != null) {
-      _canPlace = room.canPlace(this, _ghostPosition!);
+      // _canPlace = room.canPlace(this, _ghostPosition!);
+
+      final inside =
+          _ghostPosition!.x >= 0 &&
+              _ghostPosition!.y >= 0 &&
+              _ghostPosition!.x + size.x <= room.size.x &&
+              _ghostPosition!.y + size.y <= room.size.y;
+
+      _canPlace = inside && room.canPlace(this, _ghostPosition!);
     }
   }
 
@@ -265,5 +274,9 @@ class Furniture extends PositionComponent with DragCallbacks, TapCallbacks {
 
     // 실패
     removeFromParent();
+  }
+
+  void forceDragging(bool value) {
+    _dragging = value;
   }
 }

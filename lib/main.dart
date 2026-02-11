@@ -138,7 +138,7 @@ class DragGame extends FlameGame {
   void startShopDrag(FurnitureType type, Offset global) {
     final model = FurnitureModel(x: 0, y: 0, w: type.w, h: type.h, color: type.color);
 
-    shopPreview = Furniture(model: model)..isPreviewFromShop = true;
+    shopPreview = Furniture(model: model)..isPreviewFromShop = true..forceDragging(true);
 
     room.add(shopPreview!);
 
